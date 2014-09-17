@@ -1,6 +1,6 @@
----
-title: README for the Course Project of Getting and Cleaning Data
----
+
+# README for the Course Project of Getting and Cleaning Data
+
 
 #### Step 1: Merges the training and test sets to create one data set
 ############### <b>Answer to Step 1:</b> ###############

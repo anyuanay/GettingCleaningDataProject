@@ -1,6 +1,4 @@
----
-title: "Code Book for the Course Project of Gatting and Cleaning Data"
----
+# Code Book for the Course Project of Gatting and Cleaning Data
 
 ## 1. The following is a list of terms explaining the meaning of the signals in the feature variables: 
 

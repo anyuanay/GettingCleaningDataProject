@@ -1,7 +1,7 @@
 
 # README for the Course Project of Getting and Cleaning Data
 
-This README file describes the steps used for answering the questions in the course project. The file run_analysis.R contains all the code and can be executed to generate the file tidy.txt file.
+This README file describes the steps used for answering the questions in the course project. The file run_analysis.R contains all the code and can be executed to generate the final tidy.txt file.
 
 #### Step 1: Merges the training and test sets to create one data set
 ############### <b>Answer to Step 1:</b> ###############

@@ -1,105 +1,126 @@
-### Introduction
+---
+title: README for the Course Project of Getting and Cleaning Data
+---
 
-This second programming assignment will require you to write an R
-function that is able to cache potentially time-consuming computations.
-For example, taking the mean of a numeric vector is typically a fast
-operation. However, for a very long vector, it may take too long to
-compute the mean, especially if it has to be computed repeatedly (e.g.
-in a loop). If the contents of a vector are not changing, it may make
-sense to cache the value of the mean so that when we need it again, it
-can be looked up in the cache rather than recomputed. In this
-Programming Assignment you will take advantage of the scoping rules of
-the R language and how they can be manipulated to preserve state inside
-of an R object.
+#### Step 1: Merges the training and test sets to create one data set
+############### <b>Answer to Step 1:</b> ###############
+Read in the training data set
+```r
+traindata <- read.table("train/X_train.txt", header = FALSE)
+```
 
-### Example: Caching the Mean of a Vector
+Read in the labels for the training  data
+```r
+trainlabel <- read.table("train//y_train.txt", header = FALSE)
+```
 
-In this example we introduce the `<<-` operator which can be used to
-assign a value to an object in an environment that is different from the
-current environment. Below are two functions that are used to create a
-special object that stores a numeric vector and caches its mean.
+Read in the subjects for the training data
+```r
+trainsubj <- read.table("train/subject_train.txt", header = FALSE)
+```
 
-The first function, `makeVector` creates a special "vector", which is
-really a list containing a function to
+Read in the test data set
+```r
+testdata <- read.table("ttest/X_test.txt", header = FALSE)
+```
 
-1.  set the value of the vector
-2.  get the value of the vector
-3.  set the value of the mean
-4.  get the value of the mean
+Read in the labels for the test  data
+```r
+testlabel <- read.table("test//y_test.txt", header = FALSE)
+```
 
-<!-- -->
+Read in the subjects for the test data
+```r
+testsubj <- read.table("test/subject_test.txt", header = FALSE)
+```
 
-    makeVector <- function(x = numeric()) {
-            m <- NULL
-            set <- function(y) {
-                    x <<- y
-                    m <<- NULL
-            }
-            get <- function() x
-            setmean <- function(mean) m <<- mean
-            getmean <- function() m
-            list(set = set, get = get,
-                 setmean = setmean,
-                 getmean = getmean)
-    }
+Create trainning data with labels and subjects
+```r
+trainset <- cbind(traindata, trainlabel, trainsubj)
+```
 
-The following function calculates the mean of the special "vector"
-created with the above function. However, it first checks to see if the
-mean has already been calculated. If so, it `get`s the mean from the
-cache and skips the computation. Otherwise, it calculates the mean of
-the data and sets the value of the mean in the cache via the `setmean`
-function.
+Create test data with labels and subjects
+```r
+testset <- cbin(testdata, testlabel, testsubj)
+```
 
-    cachemean <- function(x, ...) {
-            m <- x$getmean()
-            if(!is.null(m)) {
-                    message("getting cached data")
-                    return(m)
-            }
-            data <- x$get()
-            m <- mean(data, ...)
-            x$setmean(m)
-            m
-    }
+<b>Finally, merge the training and test data into one data set. In this data set, the last two columns are the labels of activities and the subject identifiers. </b>
+```r
+dataset <- rbind(trainset, testset)
+```
 
-### Assignment: Caching the Inverse of a Matrix
+#### Step 2: Extracts only the meaurements on the mean and standard deviation for each measurement
+############### <b>Answer to Step 2:</b> ###############
+Read in the feature names
+```r
+featurelist <- read.table("features.txt", stringsAsFactors = FALSE)[[2]]
+```
 
-Matrix inversion is usually a costly computation and there may be some
-benefit to caching the inverse of a matrix rather than computing it
-repeatedly (there are also alternatives to matrix inversion that we will
-not discuss here). Your assignment is to write a pair of functions that
-cache the inverse of a matrix.
+To answer this question, I consider those columns whose names contain the term "mean()" and "std()" as the expected results. Extract all the feature names that contain "mean()" and "std()"
+```r
+meanstdcols <- grep("*mean\\(\\)*|*std\\(\\)*", featurelist)
+```
 
-Write the following functions:
+<b>Subset the data set on the columns for the means and standard deviations of the measurements</b>
+```r
+meanAndstd <- dataset[, meanstdcols]
+```
 
-1.  `makeCacheMatrix`: This function creates a special "matrix" object
-    that can cache its inverse.
-2.  `cacheSolve`: This function computes the inverse of the special
-    "matrix" returned by `makeCacheMatrix` above. If the inverse has
-    already been calculated (and the matrix has not changed), then
-    `cacheSolve` should retrieve the inverse from the cache.
 
-Computing the inverse of a square matrix can be done with the `solve`
-function in R. For example, if `X` is a square invertible matrix, then
-`solve(X)` returns its inverse.
+#### Step 3: Uses descrptive activity names to name the activities in the data set
+############### <b>Answer to Step 3:</b> ###############
+Set a map between the descriptive activity names and the numbers used for their indices
+```r
+act_labs <- read.table("activity_labels.txt", stringsAsFactors = FALSE)
+map <- setNames(act_labs[[2]], act_labs[[1]])
+```
 
-For this assignment, assume that the matrix supplied is always
-invertible.
+Get all the activities in the data set
+```r
+acts <- dataset[ncol(dataset) - 1]
+```
 
-In order to complete this assignment, you must do the following:
+<Replace the activity indices with descriptive names. 
+```r
+acts_des <- as.data.frame(map[unlist(acts)])
+```
 
-1.  Fork the GitHub repository containing the stub R files at
-    [https://github.com/rdpeng/ProgrammingAssignment2](https://github.com/rdpeng/ProgrammingAssignment2)
-    to create a copy under your own account.
-2.  Clone your forked GitHub repository to your computer so that you can
-    edit the files locally on your own machine.
-3.  Edit the R file contained in the git repository and place your
-    solution in that file (please do not rename the file).
-4.  Commit your completed R file into YOUR git repository and push your
-    git branch to the GitHub repository under your account.
-5.  Submit to Coursera the URL to your GitHub repository that contains
-    the completed R code for the assignment.
+<b>Replace the activity column in the data set with the column of descriptive names. After this step, the last column of the data set is the descriptive names of activities. The second last column is the subject identifiers. </b>
+```r
+dataset <- cbind(dataset, acts_des)
+dataset <- dataset[, -c(ncol(dataset) - 2)]
+```
 
-### Grading
 
-This assignment will be graded via peer assessment.
+#### Step 4: Appropriately lables the data set with descriptive variable names
+############## <b>Answer to Step 4:</b> ###############
+Add "subject" and "activity" to the featurelist
+```r
+featurelist <- c(featurelist, c("subject", "activity"))
+```
+
+<b>Add descriptive variable names to the merged single data set</b>
+```r
+desc_names <- make.names(featurelist)
+names(dataset) <- desc_names
+```
+
+
+#### Step 5: From the data set in step 4, creates a second, independently tidy data set with the average of each variable for each activity and each subject
+############### <b>Answer to Step 5:</b> ################
+Use the dplyr library
+```r
+library(dplyr)
+dataset_tbl <- tbl_df(dataset)
+```
+
+Group the data by subjects and activities
+```r
+by_subj_act <- group_by(dataset_tbl, activity, subject)
+means_all_cols <- summarise_each(by_subj_act, funs(mean))
+```
+
+<b>Output the tidy data</b>
+```r
+write.table(means_all_cols, "tidy.txt", row.names = FALSE)
+```
